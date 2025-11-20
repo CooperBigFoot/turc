@@ -17,16 +17,20 @@ l'évaporation et l'écoulement." Annales Agronomiques.
 """
 
 
-def compute_turc_discharge(annual_precip_mm: float, annual_temp_c: float) -> dict[str, float]:
+def compute_turc_discharge(
+    annual_precip_mm: float, annual_temp_c: float, annual_pet_mm: float | None = None
+) -> dict[str, float]:
     """Compute annual discharge using the Turc formula.
 
     Args:
         annual_precip_mm: Annual precipitation in mm/year
         annual_temp_c: Mean annual temperature in °C
+        annual_pet_mm: Optional annual potential evapotranspiration in mm/year.
+            If provided, this value is used as L instead of calculating from temperature.
 
     Returns:
         Dictionary with keys:
-            - L: Temperature parameter
+            - L: Temperature parameter (or PET if provided)
             - AET_mm: Actual evapotranspiration (mm/year)
             - Q_mm: Annual discharge (mm/year)
 
@@ -34,10 +38,16 @@ def compute_turc_discharge(annual_precip_mm: float, annual_temp_c: float) -> dic
         >>> result = compute_turc_discharge(1000.0, 22.5)
         >>> result["Q_mm"]  # Discharge in mm/year
         43.8
+        >>> result = compute_turc_discharge(1000.0, 22.5, annual_pet_mm=1200.0)
+        >>> result["L"]  # Uses PET value
+        1200.0
     """
-    # Step 1: Calculate temperature parameter L
-    T = annual_temp_c
-    L = 300 + 25 * T + 0.05 * (T**3)
+    # Step 1: Calculate or use provided L parameter
+    if annual_pet_mm is not None:
+        L = annual_pet_mm
+    else:
+        T = annual_temp_c
+        L = 300 + 25 * T + 0.05 * (T**3)
 
     # Step 2: Calculate actual evapotranspiration (AET)
     P = annual_precip_mm
